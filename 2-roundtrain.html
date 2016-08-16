@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+
+  <script>
+    "use strict"
+    
+    function generateTrain(carriageQuantity) {
+      
+      var firstCarriage, newCarriage, previousCarriage;
+      
+      for (var i=1; i <= carriageQuantity; i++) {
+        newCarriage = new Object();
+        newCarriage.isLightOn = (Math.random() < 0.5);
+           
+        if (i == 1) {
+          firstCarriage = newCarriage;
+        } else {
+          newCarriage.previous = previousCarriage;
+          previousCarriage.next = newCarriage;
+        }
+        previousCarriage = newCarriage;                        
+      }
+      
+      firstCarriage.previous = newCarriage;
+      newCarriage.next = firstCarriage;
+      return firstCarriage;
+    }
+    
+    function countTrainCarriages(initialCarriage) {
+      var counter = 1;
+      var initialLightState = initialCarriage.isLightOn;
+      var currentCarriage = initialCarriage;
+            
+      while (true) {
+        currentCarriage = currentCarriage.next;
+        currentCarriage.isLightOn = !currentCarriage.isLightOn;
+       
+        if (initialCarriage.isLightOn != initialLightState) break;
+        counter++;        
+      }
+      
+      return counter;
+    }
+    
+    document.write("Quantity of carriages in this train: " + countTrainCarriages(generateTrain(30)));
+
+  </script>
+
+</body>
+
+</html>
