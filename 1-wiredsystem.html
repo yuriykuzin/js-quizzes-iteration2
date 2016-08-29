@@ -1,91 +1,151 @@
 <!DOCTYPE HTML>
 <html>
-
 <head>
   <meta charset="utf-8">
 </head>
-
 <body>
-
   <script>
-    "use strict"
-    
-    var wiredSystem = {
-      type: "lamp",
-      input1: {
-        type: "gate-A",
-        input1: {
-          type: "gate-X",
-          input1: {
-            type: "gate-O",
-            input1: {
-              type: "switch",
-              value: 1
-            },
-            input2: {
-              type: "switch",
-              value: 0
-            }
-          },
-          input2: {
-            type: "gate-A",
-            input1: {
-              type: "switch",
-              value: 1
-            },
-            input2: {
-              type: "gate-N",
-              input1: {
-                type: "gate-N",
-                input1: {
-                  type: "gate-N",
-                  input1: {
-                    type: "gate-N",
-                    input1: {
-                      type: "switch",
-                      value: 1
-                    }
-                  }
-                }
-              }
-           }
-          }
-        },
-        input2: {
-          type: "gate-N",
-          input1: {
-            type: "switch",
-            value: 0
-          }
-        }
-      }
-    }
-    
-    function getResponse(wiredElement) {
+  "use strict"
 
-      if (wiredElement.type == "lamp") 
-        return getResponse(wiredElement.input1);
-               
-      if (wiredElement.type == "switch") 
-        return wiredElement.value;
-      
-      if (wiredElement.type == "gate-N") 
-        return ~getResponse(wiredElement.input1);
-      
-      var a = getResponse(wiredElement.input1);
-      var b = getResponse(wiredElement.input2);
-      
-      switch (wiredElement.type) {
-        case "gate-A": return (a & b);
-        case "gate-O": return (a | b);
-        case "gate-X": return (a ^ b);        
-      }           
-    }
+  function Node() {
+    var children = [];    
     
-    document.write("The answer is: " + getResponse(wiredSystem));
+    this.howManyChildren = function() {
+      return children.length;  
+    };
+    
+    this.attach = function(nodeToAttach) {    
+      if (!(nodeToAttach instanceof Node)) throw new TypeError("Can only attach nodes");
+      children.push(nodeToAttach);    
+      return this;
+    };    
+    
+    this.child = function(index) {
+      if (index > children.length-1) throw new RangeError("Child not found at index "+index);
+      return children[index];
+    };   
+  }
 
-  </script>
+  function GateNode() {
+    Node.apply(this, arguments);  
+    
+    var parentAttach = this.attach;      
+    this.attach = function(newNode) {
+      if (this.howManyChildren() == 2) throw new RangeError("Cannot attach more than 2 nodes to this gate");
+      parentAttach(newNode);
+      return this;
+    }; 
+  }
 
+  GateNode.prototype = Object.create(Node.prototype);
+
+  function LampNode() {
+    Node.apply(this, arguments);
+    var parentAttach = this.attach;  
+    
+    this.attach = function(newNode) {
+      if (this.howManyChildren() == 1) throw new RangeError("Cannot attach more than 1 node to a lamp");
+      parentAttach(newNode);
+      return this;
+    };
+    
+    this.valueOf = function() {  	
+      return this.child(0).valueOf();
+    };  
+  }
+
+  LampNode.prototype = Object.create(Node.prototype);
+
+  function SwitchNode(signal) {
+    Node.call(this);
+    var value = signal;
+    
+    this.valueOf = function() {  	
+      return value;
+    };
+  }
+
+  SwitchNode.prototype = Object.create(Node.prototype);
+
+  function GateXorNode() {
+    GateNode.call(this);
+
+    this.valueOf = function() {  	    
+      return (this.child(0).valueOf() ^ this.child(1).valueOf());
+    }; 
+  }
+
+  GateXorNode.prototype = Object.create(GateNode.prototype);
+
+  function GateAndNode() {
+    GateNode.call(this);
+
+    this.valueOf = function() {  	
+      return (this.child(0).valueOf() & this.child(1).valueOf());
+    }; 
+  }
+
+  GateAndNode.prototype = Object.create(GateNode.prototype);
+
+  function GateNotNode() {
+    GateNode.call(this);
+
+    this.valueOf = function() {  	       
+      return +!(this.child(0).valueOf());
+    }; 
+  }
+
+  GateNotNode.prototype = Object.create(GateNode.prototype);
+
+
+  // Test
+
+  var lamp = new LampNode();
+
+
+  lamp.attach(
+    new GateXorNode()
+    .attach(
+      new GateAndNode()
+      .attach(new SwitchNode(0))
+      .attach(new SwitchNode(1))
+    )
+    .attach(
+      new GateNotNode()
+      .attach(new SwitchNode(1))
+    )
+  );
+
+
+  console.log(lamp.valueOf()); // 0
+  console.log(lamp.child(0) instanceof GateNode); // true
+  console.log(lamp.child(0) instanceof Node); // true
+  try {
+    lamp.child(2);
+  } catch (e) {
+    console.log(e instanceof RangeError, e.message) // true, "Child not found at index 2";
+  }
+  try {
+    lamp.attach(new GateXorNode());
+  } catch (e) {
+    console.log(e instanceof RangeError, e.message) // true, "Cannot attach more than 1 node to a lamp";
+  }
+  try {
+    lamp.child(0).attach(new GateXorNode());
+  } catch (e) {
+    console.log(e instanceof RangeError, e.message) // true, "Cannot attach more than 2 nodes to this gate";
+  }
+  try {
+    new GateXorNode().valueOf()
+  } catch(e) {
+    console.log(e instanceof RangeError, e.message) // true, "Child not found at index 0";
+  }
+  try {
+    new GateXorNode().attach(new Number(10));
+  } catch(e) {
+    console.log(e instanceof TypeError, e.message) // true, "Can only attach nodes";
+  }
+
+</script>
 </body>
-
 </html>
