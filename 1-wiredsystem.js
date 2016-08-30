@@ -2,15 +2,18 @@
 
 function Node() {
   var children = [];    
-  this.childrenCount = 0;
-  var self = this;
+
+  Object.defineProperty(this, "childrenCount", {
+    get: function() {      
+      return children.length;
+    }
+  });  
      
   this.attach = function(nodeToAttach) {    
     if (!(nodeToAttach instanceof Node)) {
       throw new TypeError("Can only attach nodes");
     }
-    children.push(nodeToAttach);    
-    self.childrenCount++;
+    children.push(nodeToAttach);        
     return this;
   };    
   
@@ -19,7 +22,7 @@ function Node() {
       throw new RangeError("Child not found at index "+index);
     }
     return children[index];
-  };   
+  };     
 }
 
 function GateNode() {
