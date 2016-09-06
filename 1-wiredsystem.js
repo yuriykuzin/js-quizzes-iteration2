@@ -8,11 +8,11 @@ function Node() {}
 // NodeCanGaveChild class declaration with inheritance and getter:
 
 function NodeCanHaveChild() {
+  Node.apply(this, arguments);
   this._children = [];        
 }
 
-NodeCanHaveChild.prototype = Object.create(Node.prototype);
-NodeCanHaveChild.prototype.constructor = NodeCanHaveChild;
+inherit(NodeCanHaveChild, Node);
 
 Object.defineProperty(NodeCanHaveChild.prototype, "childrenCount", {
     get: function() {
@@ -42,8 +42,7 @@ function GateNode() {
   NodeCanHaveChild.apply(this, arguments);       
 }
 
-GateNode.prototype = Object.create(NodeCanHaveChild.prototype);
-GateNode.prototype.constructor = GateNode;
+inherit(GateNode, NodeCanHaveChild);
 
 GateNode.prototype.attach = function(newNode) {  
   if (this.childrenCount === 2) {
@@ -54,14 +53,13 @@ GateNode.prototype.attach = function(newNode) {
 }; 
 
 
-// LampNode class declaration
+// LampNode class declaration:
 
 function LampNode() {
   NodeCanHaveChild.apply(this, arguments);
 }  
 
-LampNode.prototype = Object.create(NodeCanHaveChild.prototype);
-LampNode.prototype.constructor = LampNode;
+inherit(LampNode, NodeCanHaveChild);
 
 LampNode.prototype.attach = function(newNode) {
   if (this.childrenCount === 1) {
@@ -79,11 +77,11 @@ LampNode.prototype.valueOf = function() {
 // SwitchNode class declaration:
 
 function SwitchNode(signal) {  
+  Node.apply(this, arguments);
   this._value = signal;    
 }
 
-SwitchNode.prototype = Object.create(Node.prototype);
-SwitchNode.prototype.constructor = SwitchNode;
+inherit(SwitchNode, Node);
 
 SwitchNode.prototype.valueOf = function() {  	
   return this._value;
@@ -96,8 +94,7 @@ function GateXorNode() {
   GateNode.apply(this, arguments);
 }
 
-GateXorNode.prototype = Object.create(GateNode.prototype);
-GateXorNode.prototype.constructor = GateXorNode;
+inherit(GateXorNode, GateNode);
 
 GateXorNode.prototype.valueOf = function() {  	    
   return this.child(0).valueOf() ^ this.child(1).valueOf();
@@ -107,11 +104,10 @@ GateXorNode.prototype.valueOf = function() {
 // GateOrNode class declaration:
 
 function GateOrNode() {
-  GateNode.call(this);
+  GateNode.apply(this, aruments);
 }
 
-GateOrNode.prototype = Object.create(GateNode.prototype);
-GateOrNode.prototype.constructor = GateOrNode;
+inherit(GateOrNode, GateNode);
 
 GateOrNode.prototype.valueOf = function() {  	    
   return this.child(0).valueOf() | this.child(1).valueOf();
@@ -121,11 +117,10 @@ GateOrNode.prototype.valueOf = function() {
 // GateAndNode class declaration:
 
 function GateAndNode() {
-  GateNode.call(this);
+  GateNode.apply(this, arguments);
 }
 
-GateAndNode.prototype = Object.create(GateNode.prototype);
-GateAndNode.prototype.constructor = GateAndNode;
+inherit(GateAndNode, GateNode);
 
 GateAndNode.prototype.valueOf = function() {  	
   return this.child(0).valueOf() & this.child(1).valueOf();
@@ -135,15 +130,22 @@ GateAndNode.prototype.valueOf = function() {
 // GateNotNode class declaration
 
 function GateNotNode() {
-  GateNode.call(this);
+  GateNode.apply(this, arguments);
 }
 
-GateNotNode.prototype = Object.create(GateNode.prototype);
-GateNotNode.prototype.constructor = GateNotNode;
+inherit(GateNotNode, GateNode);
 
 GateNotNode.prototype.valueOf = function() {  	       
   return +!this.child(0).valueOf();
 }; 
+
+
+// Function which helps to define inheritance in shorter code:
+
+function inherit(childClass, parentClass) {
+  childClass.prototype = Object.create(parentClass.prototype);
+  childClass.prototype.constructor = childClass;
+}
 
 
 // Test
