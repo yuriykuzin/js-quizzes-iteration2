@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="utf-8">
+</head>
+
+<body>
+
+  <script>
+    "use strict"
+    
+    function generateTrain(carriageQuantity) {
+    
+      var firstCarriage, newCarriage, previousCarriage;
+      
+      for (var i=1; i <= carriageQuantity; i++) {
+        newCarriage = new Object();
+        newCarriage.isLightOn = (Math.random() < 0.5);
+    
+           
+        if (i == 1) {
+          firstCarriage = newCarriage;
+        } else {
+          newCarriage.previous = previousCarriage;
+          previousCarriage.next = newCarriage;
+        }
+        previousCarriage = newCarriage;                        
+      }
+      
+      firstCarriage.previous = newCarriage;
+      newCarriage.next = firstCarriage;
+      return firstCarriage;
+    }    
+          
+    function countTrainCarriages(initialCarriage) {    
+    
+      // Let's assume for now there is not more then 2 dark carriages together
+      var currentHypo = 2;    
+      
+      var counterDarkCarriages = 0;
+      var currentCarriage = initialCarriage;
+      currentCarriage.isLightOn = false;
+            
+      for (var counter = 1; true; counter++) {
+        currentCarriage = currentCarriage.next;
+                
+        if (currentCarriage.isLightOn) {
+          currentCarriage.isLightOn = false;
+          counterDarkCarriages = 0;          
+        } else counterDarkCarriages++;
+        
+        if (counterDarkCarriages > currentHypo) {          
+          currentCarriage.isLightOn = true;
+          
+          for (var i = 1; i < counter; i++) {
+            currentCarriage = currentCarriage.previous;
+            if (currentCarriage.isLightOn) return i;                        
+          }
+          
+          for (var i = 1; i < counter; i++) currentCarriage = currentCarriage.next;                                    
+          currentCarriage.isLightOn = false;
+          currentHypo++;          
+        }
+      }      
+    }
+    
+    var startTime = Date.now();
+    
+    document.write("Quantity of carriages in this train: " + 
+      countTrainCarriages(generateTrain(5000)) + 
+      "<br /><br />Calculation time: " + (Date.now() - startTime) + " ms");
+    
+  </script>
+</body>
+</html>
