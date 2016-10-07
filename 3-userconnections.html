@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+</head>
+<body>
+  <script>
+  
+    "use strict"
+    
+    var users = {};
+    var semiConnections = {};
+    
+    var messages = "alberta: @bob \"It is remarkable, the character of the pleasure we derive from the best books.\"\n" + 
+          "bob: \"They impress us ever with the conviction that one nature wrote and the same reads.\" /cc @alberta\n" + 
+          "alberta: hey @christie. what will we be reading at the book club meeting tonight?\n" + 
+          "christie: \"Every day, men and women, conversing, beholding and beholden...\" /cc @alberta, @bob\n" + 
+          "bob: @duncan, @christie so I see it is Emerson tonight\n" + 
+          "duncan: We'll also discuss Emerson's friendship with Walt Whitman /cc @bob\n" + 
+          "alberta: @duncan, hope you're bringing those peanut butter chocolate cookies again :D\n" + 
+          "emily: Unfortunately, I won't be able to make it this time /cc @duncan\n" + 
+          "duncan: @emily, oh what a pity. I'll fill you in next week.\n" + 
+          "christie: @emily, \"Books are the best of things, well used; abused, among the worst.\" -- Emerson\n" + 
+          "emily: Ain't that the truth /cc @christie\n" + 
+          "duncan: hey @farid, can you pick up some of those cookies on your way home?\n" + 
+          "farid: @duncan, might have to work late tonight, but I'll try";
+    
+    var messagesByLines = messages.split("\n");
+    
+    for (var i=0; i < messagesByLines.length; i++) {
+      var senderName = messagesByLines[i].slice(0, messagesByLines[i].indexOf(":"));                
+      var pos = -1;
+    
+      while ((pos = messagesByLines[i].indexOf("@", pos + 1)) != -1) {
+        var mention = "";
+        for (var j = pos+1; j < messagesByLines[i].length; j++) {
+          var letter = messagesByLines[i].charAt(j);
+          if (/[^\W_]+$/.test(letter)) mention += letter;
+            else break;           
+        }
+        
+        if (users[senderName] === undefined) users[senderName] = new Object();
+        
+        if (users[senderName][mention] === 1) continue;   // First order connection is already exist
+        
+        if ((mention in users) && (users[mention][senderName] === 0)) {          
+          
+          // First order conection is found          
+          
+          users[mention][senderName] = 1;
+          users[senderName][mention] = 1;
+          continue;
+        } 
+        
+        // Only half-conection is found
+        
+        users[senderName][mention] = 0;       
+      }            
+    }
+    
+    // Now we know all 1-order connections
+    
+    // Removing all half-connections:
+    
+    for (var userName in users) {
+      for (var connectName in users[userName]) {
+        if (users[userName][connectName] === 0) delete users[userName][connectName];
+      }
+    }
+    
+    // Searching for conections of other orders
+    
+    var nextOrder = 2;
+    
+    searchingOfNewOrderConnections:
+    while (true) {
+      var isAnyNewConnection = false;
+    
+      for (var userName in users) {
+        for (var connectName in users[userName]) {
+          
+          if (users[userName][connectName] < nextOrder) {
+            
+            for (var connectOfConnectName in users[connectName]) {
+              
+              if ((users[connectName][connectOfConnectName] === nextOrder) || 
+                (connectOfConnectName == userName) || 
+                (connectOfConnectName in users[userName])) continue;
+                        
+              // Mark connection of the next order
+              
+              users[userName][connectOfConnectName] = nextOrder;
+              users[connectOfConnectName][userName] = nextOrder;
+              isAnyNewConnection = true;           
+            }
+          }
+        }
+      }
+      
+      if (!isAnyNewConnection) break searchingOfNewOrderConnections;
+      nextOrder++;
+    }
+    
+    // Printing the results
+    
+    var namesArray = Object.keys(users).sort();
+        
+    for (var i=0; i < namesArray.length; i++) {
+      document.write(namesArray[i] + "<br />");
+      
+      for (var currentOrder = 1; true; currentOrder++) {
+        var isAnyNewOrders = false;
+        var outputArray = [];
+        
+        for (var connectName in users[namesArray[i]]) {        
+          if (users[namesArray[i]][connectName] == currentOrder) {
+            outputArray.push(connectName);
+            isAnyNewOrders = true;
+          }
+        }
+        
+        document.write(outputArray.sort().join(", ") + "<br />");
+        if (!isAnyNewOrders) break;
+      }      
+    }
+      
+  </script>
+</body>
+</html>
